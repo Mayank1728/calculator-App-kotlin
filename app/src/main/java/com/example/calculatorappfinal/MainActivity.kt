@@ -2,6 +2,7 @@ package com.example.calculatorappfinal
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Handler // delay 2 sec and clear the textview at bottom
 import android.view.View
 import android.view.View.OnClickListener
 import android.widget.Button
@@ -13,6 +14,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var sign: TextView
     private lateinit var boxOne: EditText
     private lateinit var boxTwo: EditText
+    private var handler = Handler()
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -65,9 +67,14 @@ class MainActivity : AppCompatActivity() {
             val boxOneNum = boxOne.text.toString()
             if (boxTwoNum.length == 0 && boxOneNum.length == 0) {
                 output.append("Invalid argument  ")
-            } else if (boxOneNum.length == 0){
-                sign.setText(operation)
+                handler.postDelayed(
+                    fun() {
+                        output.setText("")
+                    }, 2000
+                )
+            } else if (boxOneNum.length == 0) {
                 boxOne.setText(boxTwoNum)
+                sign.setText(operation)
                 boxTwo.text.clear()
             } else {
                 sign.setText(operation)
@@ -85,6 +92,11 @@ class MainActivity : AppCompatActivity() {
                 val numberTwo = boxTwo.text.toString()
                 if (numberTwo.length == 0 && numberOne.length == 0) {
                     output.append("both arguments are required")
+                    handler.postDelayed(
+                        fun() {
+                            output.setText("")
+                        }, 2000
+                    )
                 } else if (numberTwo.length == 0) {
                     boxTwo.setText(numberOne)
                     boxOne.text.clear()
