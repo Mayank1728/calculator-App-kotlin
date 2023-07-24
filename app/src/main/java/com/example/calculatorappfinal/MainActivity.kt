@@ -2,8 +2,6 @@ package com.example.calculatorappfinal
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.os.Handler // delay 2 sec and clear the textview at bottom
-import android.view.View
 import android.view.View.OnClickListener
 import android.widget.Button
 import android.widget.EditText
@@ -14,13 +12,14 @@ class MainActivity : AppCompatActivity() {
     private lateinit var sign: TextView
     private lateinit var boxOne: EditText
     private lateinit var boxTwo: EditText
-    private var handler = Handler()
 
-
+    // use logcat package:com.example.calculatorappfinal
+    // to find out why the app is crashing
+    // ToDo: Build different layout for landscape mode
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        initializeViews();
+        initializeViews()
 
         // initialization of all the button variables
         val btn0 = findViewById<Button>(R.id.button0)
@@ -41,88 +40,69 @@ class MainActivity : AppCompatActivity() {
         val btnAdd = findViewById<Button>(R.id.buttonAdd)
         val btnDivide = findViewById<Button>(R.id.buttonDivide)
         val btnEqualTo = findViewById<Button>(R.id.buttonEquals)
-
+//
         // onClickListeners for btn and decimal/Dot
-        val listener = View.OnClickListener { v ->
+        val digitListener = OnClickListener { v ->
             val b = v as Button
-            output.append(b.text)
-            boxTwo.append(b.text)
+           boxTwo.append(b.text)
+           output.append(b.text)
         }
-        btn1.setOnClickListener(listener)
-        btn2.setOnClickListener(listener)
-        btn3.setOnClickListener(listener)
-        btn4.setOnClickListener(listener)
-        btn5.setOnClickListener(listener)
-        btn6.setOnClickListener(listener)
-        btn7.setOnClickListener(listener)
-        btn8.setOnClickListener(listener)
-        btn9.setOnClickListener(listener)
-        btn0.setOnClickListener(listener)
-        btnDot.setOnClickListener(listener)
+
+        btn0.setOnClickListener(digitListener)
+        btn1.setOnClickListener(digitListener)
+        btn2.setOnClickListener(digitListener)
+        btn3.setOnClickListener(digitListener)
+        btn4.setOnClickListener(digitListener)
+        btn5.setOnClickListener(digitListener)
+        btn6.setOnClickListener(digitListener)
+        btn7.setOnClickListener(digitListener)
+        btn8.setOnClickListener(digitListener)
+        btn9.setOnClickListener(digitListener)
+        btnDot.setOnClickListener(digitListener)
 
         // onClickListener for operation
-        val opListener = View.OnClickListener { v ->
-            val operation = (v as Button).text.toString()
-            val boxTwoNum = boxTwo.text.toString()
-            val boxOneNum = boxOne.text.toString()
+        val opListener = OnClickListener { v ->
+            var operation = (v as Button).text.toString()
+            var boxTwoNum = boxTwo.text.toString()
+            var boxOneNum = boxOne.text.toString()
+            // sanitize the input
+            if(boxOneNum == "."){
+                boxOneNum = "0"
+            }
+            if(boxTwoNum == "."){
+                boxTwoNum = "0"
+            }
             if (boxTwoNum.length == 0 && boxOneNum.length == 0) {
                 output.append("Invalid argument  ")
-                handler.postDelayed(
-                    fun() {
-                        output.setText("")
-                    }, 2000
-                )
             } else if (boxOneNum.length == 0) {
                 boxOne.setText(boxTwoNum)
                 sign.setText(operation)
                 boxTwo.text.clear()
-            } else {
+            } else if (boxTwoNum.length == 0) {
                 sign.setText(operation)
+            } else {
+                // calculate answer and return String
+                if(sign.text.toString() == "="){
+                    boxOne.setText(boxTwoNum)
+                } else {
+                    val ans =
+                        calcAnsAndReturnString(
+                            boxOneNum.toDouble(),
+                            boxTwoNum.toDouble(),
+                            sign.text.toString()
+                        )
+                    boxOne.setText(ans)
+                }
+                sign.setText(operation)
+                boxTwo.text.clear()
+
             }
         }
         btnMultiply.setOnClickListener(opListener)
         btnDivide.setOnClickListener(opListener)
         btnMinus.setOnClickListener(opListener)
         btnAdd.setOnClickListener(opListener)
-
-        // onClickListener for =
-        btnEqualTo.setOnClickListener(object : OnClickListener {
-            override fun onClick(p0: View?) {
-                val numberOne = boxOne.text.toString()
-                val numberTwo = boxTwo.text.toString()
-                if (numberTwo.length == 0 && numberOne.length == 0) {
-                    output.append("both arguments are required")
-                    handler.postDelayed(
-                        fun() {
-                            output.setText("")
-                        }, 2000
-                    )
-                } else if (numberTwo.length == 0) {
-                    boxTwo.setText(numberOne)
-                    boxOne.text.clear()
-                    sign.setText("") // clear sign
-                } else {
-                    val a = numberOne.toDouble()
-                    val b = numberTwo.toDouble()
-                    var res: Double
-                    if (sign.text == "+") {
-                        res = a + b
-                    } else if (sign.text == "-") {
-                        res = a - b
-                    } else if (sign.text == "/") {
-                        res = a / b
-                    } else {
-                        res = a * b
-                    }
-                    val ans = String.format("%.4f", res) // format ans to 4 decimal places
-                    boxOne.setText(ans)
-                    boxTwo.text.clear()
-                    sign.setText("")
-                }
-            }
-        })
-
-
+        btnEqualTo.setOnClickListener(opListener)
     }
 
     fun initializeViews() {
@@ -134,5 +114,24 @@ class MainActivity : AppCompatActivity() {
         output.setText("")
         boxOne.setText("")
         boxTwo.setText("")
+    }
+
+    fun calcAnsAndReturnString(a: Double, b: Double, s: String): String {
+        var res: Double = 0.0
+        res = if (s == "+") {
+            a + b
+        } else if (s == "-") {
+            a - b
+        } else if (s == "/") {
+            if (b != 0.0)
+                a / b
+            else {
+                // divide by zero
+                0.0
+            }
+        } else {
+            a * b
+        }
+        return res.toString()
     }
 }
